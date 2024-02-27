@@ -1,8 +1,4 @@
-
-(**  May need these *)
-(** TODO we are currently just using Nats but should use real numbers *)
-Require Import Field.
-Require Import Vector.
+Require Import Reals.
 
 
 Module Main.
@@ -13,13 +9,13 @@ Reference: https://www.stat.cmu.edu/~ryantibs/convexopt-F13/scribes/lec6.pdf
 *)
 
 (*TODO We can take this as an assumption*)
-Definition lipschitz (L: nat) (f: list nat -> nat) : Prop.
+Definition lipschitz (L: R) (f: list R -> R) : Prop.
 Admitted.
 
-Definition convex (f: list nat -> nat) : Prop.
+Definition convex (f: list R -> R) : Prop.
 Admitted.
 
-Definition differentiable (f: list nat -> nat) : Prop.
+Definition differentiable (f: list R -> R) : Prop.
 Admitted.
 (**
 Theorem 6.1 Suppose the function f : Rn → R is convex and differentiable, and that its gradient is
@@ -32,7 +28,7 @@ which satisfies
 where f (x∗) is the optimal value. Intuitively, this means that gradient descent is guaranteed to converge
 and that it converges with rate O(1/k).
 *)
-Theorem convergence : forall f : list nat -> nat,  exists L : nat,
+Theorem convergence : forall f : list R -> R,  exists L : R,
   lipschitz L f ->
   convex f ->
   differentiable f ->
