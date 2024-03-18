@@ -10,8 +10,22 @@ Reference: https://www.stat.cmu.edu/~ryantibs/convexopt-F13/scribes/lec6.pdf
 *)
 
 (*TODO We can take this as an assumption*)
-Definition lipschitz {n: nat} (L: R) (f: Vector.t R n -> R) : Prop.
+Definition L2norm {n: nat} (x : Vector.t R n) : R.
 Admitted.
+
+Definition vector_subtract {n:nat} (v1 v2: Vector.t R n) : Vector.t R n :=
+  map2 (fun x y => x - y) v1 v2.
+
+(* distance for real numbers*)
+Definition dist_R (x y : R) : R := Rabs (x - y).
+
+(* distance for vectors *)
+Definition dist_R_n {n:nat} (x y : Vector.t R n) : R.
+Admitted.
+
+Definition lipschitz {n: nat} (L: R) (f: Vector.t R n -> R) : Prop :=
+  forall x1 x2 : Vector.t R n,
+  dist_R (f x1) (f x2) <= dist_R_n x1 x2.
 
 Definition convex {n: nat} (f: Vector.t R n -> R) : Prop.
 Admitted.
@@ -20,11 +34,9 @@ Definition differentiable {n: nat} (f: Vector.t R n -> R) : Prop.
 Admitted.
 
 
-Definition L2norm {n: nat} (x : Vector.t R n) : R.
-Admitted.
 
-Definition vector_subtract {n:nat} (v1 v2: Vector.t R n) : Vector.t R n :=
-  map2 (fun x y => x - y) v1 v2.
+
+
 
 (**
 Theorem 6.1 Suppose the function f : Rn → R is convex and differentiable, and that its gradient is
