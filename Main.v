@@ -80,7 +80,7 @@ Lemma lipschitz_implies_inequality : forall {n: nat} (x y : Vec n) (f: CostFunct
   L > 0 ->
   (* I think we need to make lipschitz handle R^n as a function output*)
   lipschitz_gradient L (grad f) -> 
-  f y <= f x + transpose_mult ((grad f) x) (vector_subtract y x) + (1%R/2%R) * L * square (L2norm (vector_subtract y x)).
+  f y <= f x + transpose_mult ((grad f) x) (vector_subtract y x) + (1/2) * L * square (L2norm (vector_subtract y x)).
 Admitted.
 
 (*BEGIN Convergence Theorem*)
