@@ -14,6 +14,7 @@ Notation GradientFunction n := (Vector.t R n -> Vector.t R n).
 (**
 We are attempting to prove convergence of gradient descent in coq and see how far we get.
 Reference: https://www.stat.cmu.edu/~ryantibs/convexopt-F13/scribes/lec6.pdf
+Comments are occasionally from the reference.
 *)
 
 (* BEGIN Utilities *)
@@ -54,7 +55,7 @@ Definition convex {n: nat} (f: CostFunction n) : Prop.
 Admitted.
 
 (*TODO write a defination*)
-Definition differentiable {n: nat} (f: Vec n -> R) : Prop.
+Definition differentiable {n: nat} (f: CostFunction n) : Prop.
 Admitted.
 
 (* TODO see wikipedia gradients for details*)
@@ -78,7 +79,6 @@ f (y) ≤ f (x) + ∇f (x)T (y − x) + 1
 Lemma lipschitz_implies_inequality : forall {n: nat} (x y : Vec n) (f: CostFunction n),
   exists L : R,
   L > 0 ->
-  (* I think we need to make lipschitz handle R^n as a function output*)
   lipschitz_gradient L (grad f) -> 
   f y <= f x + transpose_mult ((grad f) x) (vector_subtract y x) + (1/2) * L * square (L2norm (vector_subtract y x)).
 Admitted.
