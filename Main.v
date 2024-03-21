@@ -21,8 +21,14 @@ Comments are occasionally from the reference.
 Definition L2norm {n: nat} (x : Vec n) : R.
 Admitted.
 
+(* Not sure why some of the vector functions are not in the stdlib or maybe I'm missing them.*)
+(* Might be nice to make some notation with these *)
 Definition vector_subtract {n:nat} (v1 v2: Vec n) : Vec n :=
   map2 (fun x y => x - y) v1 v2.
+
+
+Definition scalar_mult {n: nat} (s: R) (v: Vec n) : Vec n.
+Admitted.
 
 (* distance for real numbers*)
 Definition dist_R (x y : R) : R := Rabs (x - y).
@@ -61,6 +67,18 @@ Admitted.
 (* TODO see wikipedia gradients for details*)
 Definition grad {n: nat} (f : CostFunction n ) : GradientFunction n.
 Admitted.
+
+(* Gradient decent after k steps *)
+Fixpoint gradient_descent {n: nat} (k : nat) (x : Vec n) (f : CostFunction n) (learningRate: R) : Vec n :=
+  match k with
+  | O => x (*Last step return the optimized weights*)
+  | S k' => 
+    let gradient := grad f x in
+    let step := scalar_mult learningRate gradient in
+    (* Next weights *)
+    let x_i_plus_1 := vector_subtract x step in
+    gradient_descent k' x_i_plus_1 f learningRate
+  end.
 
 (* TODO I forgot which one this was and if we needed it *)
 (* Lemma lipschitz_implies_gradient_bound : lipschitz L f -> grad f -> True. *)
