@@ -33,7 +33,6 @@ Admitted.
 (* distance for real numbers*)
 Definition dist_R (x y : R) : R := Rabs (x - y).
 
-Definition square (x : R) : R := x * x.
 
 (* transpose v1 then multiply with v2 *)
 Definition transpose_mult {n: nat} (v1 v2: Vec n) : R.
@@ -98,7 +97,7 @@ Lemma lipschitz_implies_inequality : forall {n: nat} (x y : Vec n) (f: CostFunct
   exists L : R,
   L > 0 ->
   lipschitz_gradient L (grad f) -> 
-  f y <= f x + transpose_mult ((grad f) x) (vector_subtract y x) + (1/2) * L * square (L2norm (vector_subtract y x)).
+  f y <= f x + transpose_mult ((grad f) x) (vector_subtract y x) + (1/2) * L * (L2norm (vector_subtract y x) ^ 2).
 Admitted.
 
 (*BEGIN Convergence Theorem*)
@@ -121,7 +120,7 @@ Theorem convergence : forall {n: nat} (k: nat) (t: R) (x_0: Vec n) (x_k : Vec n)
   convex f ->
   differentiable f ->
   optimal x_star f ->
-  f x_k - f x_star <= (square (L2norm (vector_subtract x_0 x_star))) / (2 * t * (INR k)).
+  f x_k - f x_star <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).
 Admitted.
 
 End Main.
