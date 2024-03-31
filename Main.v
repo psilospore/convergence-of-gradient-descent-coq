@@ -105,7 +105,9 @@ Admitted.
 
 (* Minor Lemmas*)
 
+
 (* Using t ≤ 1/L, we know that −(1 − 1/2 Lt) = 1/2 Lt − 1 ≤ 1/2 L(1/L) − 1 = 1/2 − 1 = − 1 / 2 *)
+(* TODO see https://www.cs.princeton.edu/courses/archive/fall07/cos595/stdlib/html/Coq.Reals.Raxioms.html*)
 Lemma t_less_than_one_over_L_implies : forall (L t : R),
   L > 0 ->
   t <= 1 / L ->
@@ -116,7 +118,21 @@ Proof.
   rewrite Rmult_1_l in H_t_less_than_eq_1_div_L.
 Admitted.
 
-
+(*6.2 *)
+(**
+Now let’s plug in the gradient descent update by letting y = x+ = x − t∇f (x). We then get:
+f (x+) ≤ f (x) + ∇f (x)T (x+ − x) + 1/2 * L‖x+ − x‖_2^2
+= ... # Some algebra 
+= f (x) − (1 − 1/2 * L* t) t‖∇f (x)‖_2^2
+# And then use t_less_than_one_over_L_implies to get 
+= f (x) − 1/2 t‖∇f (x)‖_2^2
+*)
+Lemma f_x_plus_less_than : forall {n : nat} (x : Vec n) (f : CostFunction n) (L t : R),
+  (* x+ = x − t∇f (x) *)
+  let x_plus := vector_subtract x (scalar_mult t (grad f x)) in
+  f x_plus <= f x - 1/2 * t * ((L2norm (grad f x)) ^ 2).
+Admitted.
+(* TODO apply t_less_than_one_over_L_implies*)
 
 (*BEGIN Convergence Theorem*)
 
