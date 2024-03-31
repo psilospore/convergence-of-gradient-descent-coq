@@ -79,6 +79,9 @@ Fixpoint gradient_descent {n: nat} (k : nat) (x : Vec n) (f : CostFunction n) (l
     gradient_descent k' x_i_plus_1 f learningRate
   end.
 
+(* TODO consider making this it's own function so we can do 6.2*)
+(* Definition update_weights *)
+
 (* TODO I forgot which one this was and if we needed it *)
 (* Lemma lipschitz_implies_gradient_bound : lipschitz L f -> grad f -> True. *)
 
@@ -100,6 +103,21 @@ Lemma lipschitz_implies_inequality : forall {n: nat} (x y : Vec n) (f: CostFunct
   f y <= f x + transpose_mult ((grad f) x) (vector_subtract y x) + (1/2) * L * (L2norm (vector_subtract y x) ^ 2).
 Admitted.
 
+(* Minor Lemmas*)
+
+(* Using t ≤ 1/L, we know that −(1 − 1/2 Lt) = 1/2 Lt − 1 ≤ 1/2 L(1/L) − 1 = 1/2 − 1 = − 1 / 2 *)
+Lemma t_less_than_one_over_L_implies : forall (L t : R),
+  L > 0 ->
+  t <= 1 / L ->
+  - (1 - 1/2 * L * t) <= -1/2.
+Proof.
+  intros L t H_L_less_than_0 H_t_less_than_eq_1_div_L.
+  unfold Rdiv in H_t_less_than_eq_1_div_L.
+  rewrite Rmult_1_l in H_t_less_than_eq_1_div_L.
+Admitted.
+
+
+
 (*BEGIN Convergence Theorem*)
 
 (**
@@ -108,8 +126,6 @@ Lipschitz continuous with constant L > 0, i.e. we have that ‖∇f (x) − ∇f
 Then if we run gradient descent for k iterations with a fixed step size t ≤ 1/L, it will yield a solution f (k)
 which satisfies
           f (x(k)) − f (x∗) ≤ ‖x(0) − x∗‖2
-2
-2tk , (6.1)
 where f (x∗) is the optimal value. Intuitively, this means that gradient descent is guaranteed to converge
 and that it converges with rate O(1/k).
 *)
