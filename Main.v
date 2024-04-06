@@ -108,6 +108,7 @@ Admitted.
 
 (* Using t ≤ 1/L, we know that −(1 − 1/2 Lt) = 1/2 Lt − 1 ≤ 1/2 L(1/L) − 1 = 1/2 − 1 = − 1 / 2 *)
 (* TODO see https://www.cs.princeton.edu/courses/archive/fall07/cos595/stdlib/html/Coq.Reals.Raxioms.html*)
+(* We should do this proof first because it's the easiest*)
 Lemma t_less_than_one_over_L_implies : forall (L t : R),
   L > 0 ->
   t <= 1 / L ->
@@ -132,7 +133,27 @@ Lemma f_x_plus_less_than : forall {n : nat} (x : Vec n) (f : CostFunction n) (L 
   let x_plus := vector_subtract x (scalar_mult t (grad f x)) in
   f x_plus <= f x - 1/2 * t * ((L2norm (grad f x)) ^ 2).
 Admitted.
+
 (* TODO apply t_less_than_one_over_L_implies*)
+
+Search (fold_left).
+
+(*6.6 The total difference of the cost at each iteration and the optimum cost is bounded
+by some factor initial x subtracted by the x at the optimum and learning rate.
+
+After each iteration taking the distance of how far it is 
+from the optimum value and then sum all those values.
+Those sum of iterations should be **bounded** by some factor 
+of the initial x subtracted by the x at the optimum and learning rate.
+
+  ∑ f (x(i) − f (x∗) ≤ 1 / 2t ( ‖x(0) − x∗‖^2_2
+
+  x_1_to_k : List R Represents x^1 to x^k for the k number of iterations
+*)
+Lemma bounded_sum_of_costs: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
+  sums_of_iterations <= 1 / 2 * t * (L2norm (vector_subtract x_0 x_star) ^ 2).
+Admitted.
 
 (*BEGIN Convergence Theorem*)
 
