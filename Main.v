@@ -152,10 +152,32 @@ of the initial x subtracted by the x at the optimum and learning rate.
 *)
 Lemma bounded_sum_of_costs: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
   let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
-  sums_of_iterations <= 1 / 2 * t * (L2norm (vector_subtract x_0 x_star) ^ 2).
+  sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t).
 Admitted.
 
-(*BEGIN Convergence Theorem*)
+(*TODO add hypothesis that f is decreasing *)
+Lemma r1_lt_r2: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
+  f x_k - f x_star <= sums_of_iterations. (*TODO add k and inequality*)
+Admitted.
+
+Theorem fbla: 0 <= 0.
+Proof.
+  apply (Req_le 0).
+  reflexivity.
+Qed.
+
+
+(*TODO add hypothesis that f is decreasing. The other variation might not be needed. *)
+Lemma r2_lt_r3: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
+  sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).  (*TODO add k and inequality*)
+Admitted.
+
+(*We esentially want to squish Rlt_le_trans_middle :e. This sorta helps us do that.
+ *)
+Lemma Rlt_le_trans_middle : forall r1 r2 r3, r1 <= r2 -> r2 <= r3 -> (r1 <= r3) = (r1 <= r2).
+Admitted.
 
 (**
 Theorem 6.1 Suppose the function f : Rn → R is convex and differentiable, and that its gradient is
@@ -166,15 +188,18 @@ which satisfies
 where f (x∗) is the optimal value. Intuitively, this means that gradient descent is guaranteed to converge
 and that it converges with rate O(1/k).
 *)
-Theorem convergence : forall {n: nat} (k: nat) (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (f : CostFunction n), 
-  exists L : R,   
+Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (x_star: Vec n) (f : CostFunction n) (L : R),
   L > 0 ->
   lipschitz L f ->
   convex f ->
   differentiable f ->
   optimal x_star f ->
   f x_k - f x_star <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).
-Admitted.
+Proof.
+  intros.
+  try  (apply (Rlt_le_trans_middle _ _ _ r1_lt_r2 r2_lt_r3)). (*Was hoping this would work*)
+  (* Well what if we specify every argument? *)
+  rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star x_1st_to_kth f) (@r2_lt_r3 n k t x_0 x_k x_star x_1st_to_kth f)).
 
 End Main.
 
