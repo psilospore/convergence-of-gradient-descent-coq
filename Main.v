@@ -149,6 +149,7 @@ of the initial x subtracted by the x at the optimum and learning rate.
   ∑ f (x(i) − f (x∗) ≤ 1 / 2t ( ‖x(0) − x∗‖^2_2
 
   x_1_to_k : List R Represents x^1 to x^k for the k number of iterations
+
 *)
 Lemma bounded_sum_of_costs: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
   let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
@@ -158,20 +159,12 @@ Admitted.
 (*TODO add hypothesis that f is decreasing *)
 Lemma r1_lt_r2: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
   let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
-  f x_k - f x_star <= sums_of_iterations. (*TODO add k and inequality*)
+  f x_k - f x_star <= sums_of_iterations / (INR k). (*TODO add k and inequality*)
 Admitted.
 
-Theorem fbla: 0 <= 0.
-Proof.
-  apply (Req_le 0).
-  reflexivity.
-Qed.
-
-
-(*TODO add hypothesis that f is decreasing. The other variation might not be needed. *)
 Lemma r2_lt_r3: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
   let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
-  sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).  (*TODO add k and inequality*)
+  sums_of_iterations / (INR k) <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).  (*TODO add k and inequality*)
 Admitted.
 
 (*We esentially want to squish Rlt_le_trans_middle :e. This sorta helps us do that.
@@ -179,6 +172,27 @@ Admitted.
 Lemma Rlt_le_trans_middle : forall r1 r2 r3, r1 <= r2 -> r2 <= r3 -> (r1 <= r3) = (r1 <= r2).
 Admitted.
 
+Lemma six_to_seven: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n) (x_k : Vec n),
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
+  sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t) ->
+  f x_k - f x_star <=
+  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
+    0 x_1st_to_kth / INR k.
+Admitted.
+
+Search "nth".
+Search "Fin".
+
+Lemma five_six: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n) (x_k : Vec n),
+  (forall (i: nat), f (nth x_1st_to_kth (S i)) - f(nth x_1st_to_kth i) <= L2norm (vector_subtract (nth x_1st_to_kth i) x_star) ^ 2 / (2 * t) - L2norm (vector_subtract (nth x_1st_to_kth (i - 1)) x_star) ^ 2 / (2 * t))
+  ->
+  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
+    0 x_1st_to_kth <=
+  L2norm (vector_subtract x_0 x_star) ^ 2 / (2 * t).
+
+
+
+(*Bridge from 6.6 to 6.7*)
 (**
 Theorem 6.1 Suppose the function f : Rn → R is convex and differentiable, and that its gradient is
 Lipschitz continuous with constant L > 0, i.e. we have that ‖∇f (x) − ∇f (y)‖2 ≤ L‖x − y‖2 for any x, y.
@@ -197,9 +211,13 @@ Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n)
   f x_k - f x_star <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).
 Proof.
   intros.
-  try  (apply (Rlt_le_trans_middle _ _ _ r1_lt_r2 r2_lt_r3)). (*Was hoping this would work*)
-  (* Well what if we specify every argument? *)
+  try  (rewrite (Rlt_le_trans_middle _ _ _ r1_lt_r2 r2_lt_r3)). (*Was hoping this would work*)
+  (* Well what if we specify everiy argument? *)
   rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star x_1st_to_kth f) (@r2_lt_r3 n k t x_0 x_k x_star x_1st_to_kth f)).
+  apply (six_to_seven t x_0).
+  rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star x_1st_to_kth f) (@r2_lt_r3 n k t x_0 x_k x_star x_1st_to_kth f)).
+
+
 
 End Main.
 
