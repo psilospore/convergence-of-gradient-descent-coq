@@ -11,6 +11,9 @@ Notation CostFunction n := (Vector.t R n -> R).
 
 Notation GradientFunction n := (Vector.t R n -> Vector.t R n).
 
+(*All the x points from x_1 to x_k where x in Real ^ n for some arbitrary n dimensions *)
+Notation X_Points k n := (Vector.t (Vec n) k).
+
 (**
 We are attempting to prove convergence of gradient descent in coq and see how far we get.
 Reference: https://www.stat.cmu.edu/~ryantibs/convexopt-F13/scribes/lec6.pdf
@@ -151,19 +154,19 @@ of the initial x subtracted by the x at the optimum and learning rate.
   x_1_to_k : List R Represents x^1 to x^k for the k number of iterations
 
 *)
-Lemma bounded_sum_of_costs: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
-  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
+Lemma bounded_sum_of_costs: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n),
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 X in
   sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t).
 Admitted.
 
 (*TODO add hypothesis that f is decreasing *)
-Lemma r1_lt_r2: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
-  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
+Lemma r1_lt_r2: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n),
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 X in
   f x_k - f x_star <= sums_of_iterations / (INR k). (*TODO add k and inequality*)
 Admitted.
 
-Lemma r2_lt_r3: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n),
-  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
+Lemma r2_lt_r3: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n),
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 X in
   sums_of_iterations / (INR k) <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).  (*TODO add k and inequality*)
 Admitted.
 
@@ -172,20 +175,40 @@ Admitted.
 Lemma Rlt_le_trans_middle : forall r1 r2 r3, r1 <= r2 -> r2 <= r3 -> (r1 <= r3) = (r1 <= r2).
 Admitted.
 
-Lemma six_to_seven: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n) (x_k : Vec n),
-  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 x_1st_to_kth in
+Lemma six_to_seven: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n) (x_k : Vec n),
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 X in
   sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t) ->
   f x_k - f x_star <=
   fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
-    0 x_1st_to_kth / INR k.
+    0 X / INR k.
 Admitted.
 
 Search "nth".
 Search "Fin".
 
-Lemma five_six: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (f : CostFunction n) (x_k : Vec n),
-  (forall (i: nat), f (nth x_1st_to_kth (S i)) - f(nth x_1st_to_kth i) <= L2norm (vector_subtract (nth x_1st_to_kth i) x_star) ^ 2 / (2 * t) - L2norm (vector_subtract (nth x_1st_to_kth (i - 1)) x_star) ^ 2 / (2 * t))
+
+(* 6.5 -> 6.6 A *)
+Lemma six_five_implies_six_six_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
+    (forall (i: nat) (Hi: Nat.lt i k) (HSi: Nat.lt (S i) k) (Hi_minus_one: Nat.lt (i-1) k),
+        let xi_minus_one := nth X (Fin.of_nat_lt Hi_minus_one) in
+        let xi := nth X (Fin.of_nat_lt Hi) in
+        let xi_plus_one := nth X (Fin.of_nat_lt HSi) in
+        let f_x_star := f x_star in
+        let f_xi_plus_one := f xi_plus_one in
+        let right_hand := 1 / (2 * t) * vector_subtract ((L2norm (vector_subtract xi - x_star)^2) (L2norm(vector_subtract HSi x_star)^2)) in
+        f_xi_plus_one - f_x_star <= right_hand ->
+        fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
+                  <= 1 / (2*t) * vector_subtract ((L2norm (vector_subtract xi_minus_one x_star)^2) (L2norm(vector_subtract xi x_star)^2))).
+
+(* 6.6 A -> 6.6 C *)
+Lemma six_six_A_implies_six_six_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points),
+  (* 6.6 A *)
+  (* TODO *)
+  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
+    0 x_1st_to_kth <= (* TODO righthand inequality in statement 6.6 A *)
+
   ->
+  (* 6.6 C *)
   fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
     0 x_1st_to_kth <=
   L2norm (vector_subtract x_0 x_star) ^ 2 / (2 * t).
@@ -202,7 +225,7 @@ which satisfies
 where f (x∗) is the optimal value. Intuitively, this means that gradient descent is guaranteed to converge
 and that it converges with rate O(1/k).
 *)
-Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (x_1st_to_kth: Vector.t (Vec n) k) (x_star: Vec n) (f : CostFunction n) (L : R),
+Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (X: X_Points) (f : CostFunction n) (L : R),
   L > 0 ->
   lipschitz L f ->
   convex f ->
