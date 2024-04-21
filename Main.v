@@ -183,9 +183,6 @@ Lemma six_to_seven: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n)
     0 X / INR k.
 Admitted.
 
-Search "nth".
-Search "Fin".
-
 
 (* 6.5 -> 6.6 A *)
 Lemma six_five_implies_six_six_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
@@ -195,17 +192,17 @@ Lemma six_five_implies_six_six_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (
         let xi_plus_one := nth X (Fin.of_nat_lt HSi) in
         let f_x_star := f x_star in
         let f_xi_plus_one := f xi_plus_one in
-        let right_hand := 1 / (2 * t) * vector_subtract ((L2norm (vector_subtract xi - x_star)^2) (L2norm(vector_subtract HSi x_star)^2)) in
+        let right_hand := 1 / (2 * t) * (L2norm (vector_subtract xi x_star)^2 - L2norm(vector_subtract xi_plus_one x_star)^2) in
         f_xi_plus_one - f_x_star <= right_hand ->
-        fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
-                  <= 1 / (2*t) * vector_subtract ((L2norm (vector_subtract xi_minus_one x_star)^2) (L2norm(vector_subtract xi x_star)^2))).
+        fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X
+                  <= 1 / (2*t) * (L2norm (vector_subtract xi_minus_one x_star)^2 - L2norm(vector_subtract xi x_star)^2)).
 
 (* 6.6 A -> 6.6 C *)
 Lemma six_six_A_implies_six_six_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points),
   (* 6.6 A *)
   (* TODO *)
-  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
-    0 x_1st_to_kth <= (* TODO righthand inequality in statement 6.6 A *)
+  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X
+      <= (* TODO righthand inequality in statement 6.6 A *)
 
   ->
   (* 6.6 C *)
