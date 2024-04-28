@@ -30,6 +30,9 @@ Definition vector_subtract {n:nat} (v1 v2: Vec n) : Vec n :=
   map2 (fun x y => x - y) v1 v2.
 
 
+Definition vector_addition {n:nat} (v1 v2: Vec n) : Vec n :=
+  map2 (fun x y => x + y) v1 v2.
+
 Definition scalar_mult {n: nat} (s: R) (v: Vec n) : Vec n.
 Admitted.
 
@@ -175,13 +178,6 @@ Admitted.
 Lemma Rlt_le_trans_middle : forall r1 r2 r3, r1 <= r2 -> r2 <= r3 -> (r1 <= r3) = (r1 <= r2).
 Admitted.
 
-Lemma six_to_seven: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n) (x_k : Vec n),
-  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 X in
-  sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t) ->
-  f x_k - f x_star <=
-  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
-    0 X / INR k.
-Admitted.
 
 
 (* 6.5 -> 6.6 A *)
@@ -192,25 +188,54 @@ Lemma six_five_implies_six_six_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (
         let xi_plus_one := nth X (Fin.of_nat_lt HSi) in
         let f_x_star := f x_star in
         let f_xi_plus_one := f xi_plus_one in
-        let right_hand := 1 / (2 * t) * (L2norm (vector_subtract xi x_star)^2 - L2norm(vector_subtract xi_plus_one x_star)^2) in
-        f_xi_plus_one - f_x_star <= right_hand ->
-        fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X
-                  <= 1 / (2*t) * (L2norm (vector_subtract xi_minus_one x_star)^2 - L2norm(vector_subtract xi x_star)^2)).
+        let six_five_right_hand := 1 / (2 * t) * (L2norm (vector_subtract xi x_star)^2 - L2norm(vector_subtract xi_plus_one x_star)^2) in
+        f_xi_plus_one - f_x_star <= six_five_right_hand) ->
+
+        (* 6.6 A *)
+        let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
+        (* Use an acc that has the previous element to track x^(i-1) *)
+        let six_six_a_right_hand_sum := fold_left (
+            fun acc (x_i : Vec n) => match acc with
+              | (totalSum, x_i_minus_1) => (totalSum + (L2norm(vector_subtract x_i_minus_1 x_star)^2 - L2norm(vector_subtract x_i x_star)^2), x_i)
+        end
+        ) (0, x_0) X in
+        let six_six_a_right_hand := match six_six_a_right_hand_sum with
+                                    | (sum, _) => 1 / (2 * t) * sum
+        end in
+        six_six_a_left_hand <= six_six_a_right_hand.
+Proof.
+Admitted.
 
 (* 6.6 A -> 6.6 C *)
-Lemma six_six_A_implies_six_six_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points),
+Lemma six_six_A_implies_six_six_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
   (* 6.6 A *)
+  let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
+  (* Use an acc that has the previous element to track x^(i-1) *)
+  let six_six_a_right_hand_sum := fold_left (
+      fun acc (x_i : Vec n) => match acc with
+        | (totalSum, x_i_minus_1) => (totalSum + (L2norm(vector_subtract x_i_minus_1 x_star)^2 - L2norm(vector_subtract x_i x_star)^2), x_i)
+  end
+  ) (0, x_0) X in
+  let six_six_a_right_hand := match six_six_a_right_hand_sum with
+                              | (sum, _) => 1 / (2 * t) * sum
+  end in
+  six_six_a_left_hand <= six_six_a_right_hand ->
   (* TODO *)
-  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X
-      <= (* TODO righthand inequality in statement 6.6 A *)
-
-  ->
   (* 6.6 C *)
-  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star)
-    0 x_1st_to_kth <=
-  L2norm (vector_subtract x_0 x_star) ^ 2 / (2 * t).
+    six_six_a_left_hand <= (1/2*t) * (L2norm(vector_subtract x_0 x_star) ^ 2).
+Proof.
+Admitted.
 
 
+Lemma six_to_seven: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n) (x_k : Vec n),
+  (* 6.7 B *)
+  let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 X in
+  sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t) ->
+  (* 6.7 A *)
+  f x_k - f x_star <=
+  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X / INR k.
+Proof.
+Admitted.
 
 (*Bridge from 6.6 to 6.7*)
 (**
@@ -222,7 +247,7 @@ which satisfies
 where f (x∗) is the optimal value. Intuitively, this means that gradient descent is guaranteed to converge
 and that it converges with rate O(1/k).
 *)
-Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_k : Vec n) (X: X_Points) (f : CostFunction n) (L : R),
+Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_k: Vec n) (X: X_Points k n) (f: CostFunction n) (L : R),
   L > 0 ->
   lipschitz L f ->
   convex f ->
@@ -233,9 +258,9 @@ Proof.
   intros.
   try  (rewrite (Rlt_le_trans_middle _ _ _ r1_lt_r2 r2_lt_r3)). (*Was hoping this would work*)
   (* Well what if we specify everiy argument? *)
-  rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star x_1st_to_kth f) (@r2_lt_r3 n k t x_0 x_k x_star x_1st_to_kth f)).
+  rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star X f) (@r2_lt_r3 n k t x_0 x_k x_star X f)).
   apply (six_to_seven t x_0).
-  rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star x_1st_to_kth f) (@r2_lt_r3 n k t x_0 x_k x_star x_1st_to_kth f)).
+  apply ()
 
 
 
