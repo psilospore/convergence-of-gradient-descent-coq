@@ -264,6 +264,33 @@ Admitted.
 
 (* OK so this strategy is working let's keep going backwards and delete the forward lemmas later*)
 
+(*Goal I'm stuck at *)
+  (* f x_k - f x_star <= fold_left (fun (acc : R) (x_i : Vec n) =>
+      acc + f x_i - f x_star) 0 X / INR k *)
+(* Well that doesn't make sense it's different *)
+
+Lemma L6_6_C_implies_6_6_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
+  (* 6.6 C *)
+  let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
+
+  six_six_a_left_hand <= (L2norm(vector_subtract x_0 x_star) ^ 2) / (2 * t) ->
+  (* 6.6 A *)
+  six_six_a_left_hand <=
+
+  (* Use an acc that has the previous element to track x^(i-1) *)
+  let six_six_a_right_hand_sum := fold_left (
+      fun acc (x_i : Vec n) => match acc with
+        | (totalSum, x_i_minus_1) => (totalSum + (L2norm(vector_subtract x_i_minus_1 x_star)^2 - L2norm(vector_subtract x_i x_star)^2), x_i)
+  end
+  ) (0, x_0) X in
+  let six_six_a_right_hand := match six_six_a_right_hand_sum with
+                              | (sum, _) =>  sum / (2 * t)
+  end in
+  six_six_a_right_hand.
+Proof.
+Admitted.
+
+
 (**
 Theorem 6.1 Suppose the function f : Rn → R is convex and differentiable, and that its gradient is
 Lipschitz continuous with constant L > 0, i.e. we have that ‖∇f (x) − ∇f (y)‖2 ≤ L‖x − y‖2 for any x, y.
@@ -282,11 +309,14 @@ Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec 
   f x_k - f x_star <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).
 Proof.
   intros.
-  try  (rewrite (Rlt_le_trans_middle _ _ _ r1_lt_r2 r2_lt_r3)). (*Was hoping this would work*)
-  (* Well what if we specify every argument? *)
+  (*Old strategy *)
   rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star X f) (@r2_lt_r3 n k t x_0 x_k x_star X f)).
   apply (L6_7_B_implies_6_7A t x_0).
   apply (L6_7_A_implies_6_6_C t x_0 x_star X f x_k).
+  (* Goal: *)
+  (* f x_k - f x_star <= fold_left (fun (acc : R) (x_i : Vec n) =>
+      acc + f x_i - f x_star) 0 X / INR k *)
+  apply (L6_6_C_implies_6_6_A t x_0 x_star X f).
 
 
 End Main.
