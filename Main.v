@@ -181,7 +181,7 @@ Admitted.
 
 
 (* 6.5 -> 6.6 A *)
-Lemma six_five_implies_six_six_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
+Lemma L6_5_implies_6_6_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
     (forall (i: nat) (Hi: Nat.lt i k) (HSi: Nat.lt (S i) k) (Hi_minus_one: Nat.lt (i-1) k),
         let xi_minus_one := nth X (Fin.of_nat_lt Hi_minus_one) in
         let xi := nth X (Fin.of_nat_lt Hi) in
@@ -207,7 +207,7 @@ Proof.
 Admitted.
 
 (* 6.6 A -> 6.6 C *)
-Lemma six_six_A_implies_six_six_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
+Lemma L6_6_A_implies_6_6_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
   (* 6.6 A *)
   let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
   (* Use an acc that has the previous element to track x^(i-1) *)
@@ -220,14 +220,25 @@ Lemma six_six_A_implies_six_six_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) 
                               | (sum, _) => 1 / (2 * t) * sum
   end in
   six_six_a_left_hand <= six_six_a_right_hand ->
-  (* TODO *)
   (* 6.6 C *)
-    six_six_a_left_hand <= (1/2*t) * (L2norm(vector_subtract x_0 x_star) ^ 2).
+  six_six_a_left_hand <= (1/2*t) * (L2norm(vector_subtract x_0 x_star) ^ 2).
 Proof.
 Admitted.
 
+Lemma L6_6_C_implies_6_7_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n) (x_k : Vec n),
+  (* 6.6 C *)
+  let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
 
-Lemma six_to_seven: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n) (x_k : Vec n),
+  six_six_a_left_hand <= (1/2*t) * (L2norm(vector_subtract x_0 x_star) ^ 2) ->
+  (* 6.7 A *)
+  f x_k - f x_star <=
+  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X / INR k.
+Proof.
+Admitted.
+
+(*Hmm this moves backwards and the rest move forward*)
+(*This was the strategy we did with joe so I must have meant to go backwards*)
+Lemma L6_7_B_implies_6_7A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n) (x_k : Vec n),
   (* 6.7 B *)
   let sums_of_iterations := fold_left (fun (acc : R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 X in
   sums_of_iterations <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t) ->
@@ -237,7 +248,22 @@ Lemma six_to_seven: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n)
 Proof.
 Admitted.
 
-(*Bridge from 6.6 to 6.7*)
+(*Ok so I need to make a 6.7 A implies 6.6 C*)
+(*So copy and paste my old code *)
+
+Lemma L6_7_A_implies_6_6_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n) (x_k : Vec n),
+  (* 6.7 A *)
+  f x_k - f x_star <=
+  fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X / INR k ->
+  (* 6.6 C *)
+  let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
+
+  six_six_a_left_hand <= (L2norm(vector_subtract x_0 x_star) ^ 2) / (2 * t).
+Proof.
+Admitted.
+
+(* OK so this strategy is working let's keep going backwards and delete the forward lemmas later*)
+
 (**
 Theorem 6.1 Suppose the function f : Rn → R is convex and differentiable, and that its gradient is
 Lipschitz continuous with constant L > 0, i.e. we have that ‖∇f (x) − ∇f (y)‖2 ≤ L‖x − y‖2 for any x, y.
@@ -257,11 +283,10 @@ Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec 
 Proof.
   intros.
   try  (rewrite (Rlt_le_trans_middle _ _ _ r1_lt_r2 r2_lt_r3)). (*Was hoping this would work*)
-  (* Well what if we specify everiy argument? *)
+  (* Well what if we specify every argument? *)
   rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star X f) (@r2_lt_r3 n k t x_0 x_k x_star X f)).
-  apply (six_to_seven t x_0).
-  apply ()
-
+  apply (L6_7_B_implies_6_7A t x_0).
+  apply (L6_7_A_implies_6_6_C t x_0 x_star X f x_k).
 
 
 End Main.
