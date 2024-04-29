@@ -182,15 +182,14 @@ Admitted.
 
 
 (* 6.5 -> 6.6 A *)
-Lemma L6_5_implies_6_6_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
-    (forall (i: nat) (Hi: Nat.lt i k) (HSi: Nat.lt (S i) k) (Hi_minus_one: Nat.lt (i-1) k),
+Lemma L6_5_implies_6_6_A: forall {n: nat} {k: nat} (t: R) (X: X_Points k n) (x_0: Vec n) (x_star: Vec n) (f: CostFunction n) (i: nat) (Hi: Nat.lt i k) (HSi: Nat.lt (S i) k) (Hi_minus_one: Nat.lt (i-1) k),
         let xi_minus_one := nth X (Fin.of_nat_lt Hi_minus_one) in
         let xi := nth X (Fin.of_nat_lt Hi) in
         let xi_plus_one := nth X (Fin.of_nat_lt HSi) in
         let f_x_star := f x_star in
         let f_xi_plus_one := f xi_plus_one in
         let six_five_right_hand := 1 / (2 * t) * (L2norm (vector_subtract xi x_star)^2 - L2norm(vector_subtract xi_plus_one x_star)^2) in
-        f_xi_plus_one - f_x_star <= six_five_right_hand) ->
+        f_xi_plus_one - f_x_star <= six_five_right_hand ->
 
         (* 6.6 A *)
         let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
@@ -208,7 +207,7 @@ Proof.
 Admitted.
 
 (* 6.6 A -> 6.6 C *)
-Lemma L6_6_A_implies_6_6_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
+Lemma L6_6_A_implies_6_6_C: forall {n: nat} {k: nat} (t: R) (X: X_Points k n) (x_0: Vec n) (x_star: Vec n)  (f: CostFunction n),
   (* 6.6 A *)
   let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
   (* Use an acc that has the previous element to track x^(i-1) *)
@@ -226,7 +225,7 @@ Lemma L6_6_A_implies_6_6_C: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star
 Proof.
 Admitted.
 
-Lemma L6_6_C_implies_6_7_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n) (x_k : Vec n),
+Lemma L6_6_C_implies_6_7_A: forall {n: nat} {k: nat} (t: R) (X: X_Points k n) (x_0: Vec n) (x_star: Vec n)  (f: CostFunction n) (x_k : Vec n),
   (* 6.6 C *)
   let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
 
@@ -265,11 +264,6 @@ Admitted.
 
 (* OK so this strategy is working let's keep going backwards and delete the forward lemmas later*)
 
-(*Goal I'm stuck at *)
-  (* f x_k - f x_star <= fold_left (fun (acc : R) (x_i : Vec n) =>
-      acc + f x_i - f x_star) 0 X / INR k *)
-(* Well that doesn't make sense it's different *)
-
 Lemma L6_6_C_implies_6_6_A: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f: CostFunction n),
   (* 6.6 C *)
   let six_six_a_left_hand := fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X in
@@ -292,13 +286,13 @@ Proof.
 Admitted.
 
 (* Yeonhee and I were making another attempt with the forward strategy *)
-Lemma L6_7_A_implies_6_7_B: forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (X: X_Points k n) (f : CostFunction n) (x_k : Vec n),
+Lemma L6_7_A_implies_6_7_B: forall {n: nat} {k: nat} (t: R) (X: X_Points k n) (x_0: Vec n) (x_star: Vec n)  (f : CostFunction n) (x_k : Vec n),
     (* 6.7 A *)
   let sums_of_iterations := fold_left (fun (acc :R) (x_i : Vec n) => acc + (f x_i) - (f x_star)) 0 X in
   f x_k - f x_star <=
     fold_left (fun (acc : R) (x_i : Vec n) => acc + f x_i - f x_star) 0 X / INR k ->
   (* 6.7 B *)
-  f x_k - f x_star <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t).
+  f x_k - f x_star <= (L2norm (vector_subtract x_0 x_star)) ^ 2 / (2 * t * (INR k)).
 Proof.
 Admitted.
 
@@ -358,8 +352,14 @@ Lemma L6_4_D_implies_6_5: forall {n: nat} {k: nat} (t: R) (X: X_Points k n) (x_s
   distance_xi_plus_one_x_star <= 1 / (2 * t) * (L2norm (vector_subtract xi x_star)^2 - L2norm(vector_subtract xi_plus_one x_star)^2).
 Admitted.
 
-Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_k: Vec n) (X: X_Points k n) (f: CostFunction n) (L : R) (i: nat) (Hi: Nat.lt i k) (HSi: Nat.lt (S i) k) (Hi_minus_one: Nat.lt (i-1) k),
+Theorem lipschitz_implies_grad: forall {n: nat} (L: R) (f: CostFunction n),
+    lipschitz L f ->
+  lipschitz_gradient L (grad f).
+Proof.
+Admitted.
 
+Theorem convergence : forall {n: nat} {k: nat} (t: R) (x_0: Vec n) (x_star: Vec n) (x_k: Vec n) (X: X_Points k n) (f: CostFunction n) (L : R) (i: nat) (Hi: Nat.lt i k) (HSi: Nat.lt (S i) k) (Hi_minus_one: Nat.lt (i-1) k),
+  lipschitz L f ->
   L > 0 ->
   lipschitz L f ->
   convex f ->
@@ -376,22 +376,17 @@ Proof.
   apply (@L6_3_implies_6_4_A n k t X x_star f) in MainH.
   apply (@L6_4_A_implies_6_4_D n k t X x_star f) in MainH.
   apply (@L6_4_D_implies_6_5 n k t X x_star f) in MainH.
-
-  rewrite (f_x_plus_less_than) in MainH.
-
-
-    (forall (i: nat) (Hi: Nat.lt i k) (HSi: Nat.lt (S i) k) (Hi_minus_one: Nat.lt (i-1) k),
-
-
-  apply (@lipschitz_implies_inequality n L (nth X (Fin.of_nat_lt _)) (nth X (Fin.of_nat_lt _)) f) in H.
-  (*Old strategy *)
-  rewrite (Rlt_le_trans_middle _ _ _ (@r1_lt_r2 n k t x_0 x_k x_star X f) (@r2_lt_r3 n k t x_0 x_k x_star X f)).
-  apply (L6_7_B_implies_6_7A t x_0).
-  apply (L6_7_A_implies_6_6_C t x_0 x_star X f x_k).
-  (* Goal: *)
-  (* f x_k - f x_star <= fold_left (fun (acc : R) (x_i : Vec n) =>
-      acc + f x_i - f x_star) 0 X / INR k *)
-  apply (L6_6_C_implies_6_6_A t x_0 x_star X f).
+  apply (@L6_5_implies_6_6_A n k t X x_0 x_star f) in MainH.
+  apply (@L6_6_A_implies_6_6_C n k t X x_0 x_star f) in MainH.
+  apply (@L6_6_C_implies_6_7_A n k t X x_0 x_star f x_k) in MainH.
+  apply (@L6_7_A_implies_6_7_B n k t X x_0 x_star f x_k) in MainH.
+  - apply MainH.
+  - auto.
+  - apply t.
+  - apply t.
+  - apply H0.
+  - apply (lipschitz_implies_grad) in H. apply H.
+Qed.
 
 (**
 We decided thanks to Steven that we can just introduce hypothesis moving forward.
